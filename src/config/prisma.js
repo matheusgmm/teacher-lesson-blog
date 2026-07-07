@@ -1,10 +1,9 @@
 require('dotenv').config();
 
 const { PrismaClient } = require('@prisma/client');
-const { PrismaMySQL } = require('@prisma/adapter-mysql');
+const { PrismaMariaDb } = require('@prisma/adapter-mariadb');
 
-
-const adapter = new PrismaMySQL({
+const adapter = new PrismaMariaDb({
   host: process.env.MYSQL_HOST,
   port: process.env.MYSQL_PORT,
   user: process.env.MYSQL_USER,
@@ -15,4 +14,4 @@ const adapter = new PrismaMySQL({
 
 const prisma = new PrismaClient({ adapter });
 
-export { prisma };
+module.exports = { prisma };
