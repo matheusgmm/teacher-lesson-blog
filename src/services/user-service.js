@@ -101,9 +101,37 @@ async function updateUser(targetId, data, requester) {
   return userRepository.updateUser(Number(targetId), allowed);
 }
 
+
+async function deleteUser(targetId, requester) {
+  const id = Number(targetId);
+
+  if (!targetId || Number.isNaN(id)) {
+    throw new CodedApiError('USER_ID_REQUIRED', 'User id is required', 400);
+  }
+
+  const isSelf = requester.id === id;
+  const isAdmin = requester.role === 'ADMIN';
+
+  if (!isSelf && !isAdmin) {
+    throw new CodedApiError("UNAUTHORIZED", 'Unauthorized, you are not allowed to delete this user', 401);
+  }
+
+  if (isSelf) {
+    throw new CodedApiError("FORBIDDEN", 'You are not allowed to delete yourself', 403);
+  }
+
+  const alreadyExists = await findUserById(id);
+  if (!alreadyExists || alreadyExists.deleted_at) {
+    throw new CodedApiError("USER_NOT_FOUND", 'User not found', 404);
+  }
+
+  return userRepository.deactivateUser(id);
+}
+
 module.exports = {
   findUserByEmail,
   findUserById,
   createUser,
   updateUser,
+  deleteUser,
 };

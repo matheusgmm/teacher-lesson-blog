@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const authRoutes = require('./routes/auth.routes');
 const { errorHandler } = require('./middlewares/error-handler.middleware');
+const { CodedApiError } = require('./utils/CodedApiError.util');
 const userRoutes = require('./routes/user.routes');
 
 const app = express();
@@ -20,6 +21,10 @@ app.get('/status', (_, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
+
+app.use((req, res, next) => {
+  next(new CodedApiError('NOT_FOUND', `Cannot ${req.method} ${req.originalUrl}`, 404));
+});
 
 app.use(errorHandler);
 
