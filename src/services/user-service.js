@@ -1,12 +1,21 @@
 const userRepository = require('../repositories/user-repository');
 const { CodedApiError } = require('../utils/CodedApiError.util');
+const { pick } = require('../utils/helpers.util');
 
 async function findUserByEmail(email) {
   if (!email) {
-    throw new CodedApiError("EMAIL_REQUIRED", 'Email is required', 400);
+    throw new CodedApiError('EMAIL_REQUIRED', 'Email is required', 400);
   }
 
   return userRepository.findByEmail(email);
+}
+
+async function findUserById(id) {
+  if (!id) {
+    throw new CodedApiError('USER_ID_REQUIRED', 'User id is required', 400);
+  }
+
+  return userRepository.getUserById(Number(id));
 }
 
 async function createUser(data) {
@@ -14,7 +23,46 @@ async function createUser(data) {
     throw new CodedApiError("NAME_EMAIL_PASSWORD_REQUIRED", 'Name, email and password are required', 400);
   }
 
+  const emailExists = await findUserByEmail(data.email);
+  if (emailExists && emailExists.id !== data.id) {
+    throw new CodedApiError("EMAIL_ALREADY_EXISTS", 'Email already exists', 400);
+  }
+
   return userRepository.createUser(data);
 }
 
-module.exports = { findUserByEmail, createUser };
+async function updateUser(targetId, data, requester) {
+  const isSelf = requester.id === targetId;
+  const isAdmin = requester.role === 'ADMIN';
+
+  if (!isSelf && !isAdmin) {
+    throw new CodedApiError("UNAUTHORIZED", 'Unauthorized, you are not allowed to update this user', 401);
+  }
+
+  const alreadyExists = await findUserById(targetId);
+  if (!alreadyExists || alreadyExists.deleted_at) {
+    throw new CodedApiError("USER_NOT_FOUND", 'User not found', 404);
+  }
+
+  const allowed = isAdmin
+    ? pick(data, ['name', 'email', 'password', 'role'])
+    : pick(data, ['name', 'email', 'password']);
+
+  allowed.role = isAdmin ? allowed.role || 'USER' : 'USER';
+
+  if (allowed.email !== undefined) {
+    const emailExists = await findUserByEmail(allowed.email);
+    if (emailExists && emailExists.id !== targetId) {
+      throw new CodedApiError("EMAIL_ALREADY_EXISTS", 'Email already exists', 400);
+    }
+  }
+
+  return userRepository.updateUser(Number(targetId), allowed);
+}
+
+module.exports = {
+  findUserByEmail,
+  findUserById,
+  createUser,
+  updateUser,
+};

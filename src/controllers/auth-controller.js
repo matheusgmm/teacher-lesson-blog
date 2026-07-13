@@ -8,16 +8,6 @@ async function register(req, res, next) {
     try {
         const { name, email, password } = req.body;
 
-        if (!name || !email || !password) {
-            throw new CodedApiError("INVALID_REQUEST_BODY", 'Invalid request body', 400);
-        }
-
-        const emailExists = await userService.findUserByEmail(email);
-
-        if (emailExists) {
-            throw new CodedApiError("EMAIL_ALREADY_EXISTS", 'Email already exists', 400);
-        }
-
         const user = await userService.createUser({ name, email, password });
 
         return res.status(201).json({
@@ -28,7 +18,11 @@ async function register(req, res, next) {
 
 
     } catch (error) {
-        return next(error instanceof CodedApiError ? error : new CodedApiError(error.message, 500));
+        return next(
+            error instanceof CodedApiError
+                ? error
+                : new CodedApiError('REGISTER_FAILED', error.message, 500),
+        );
     }
 }
 
@@ -50,7 +44,7 @@ async function login(req, res, next) {
             throw new CodedApiError("INVALID_CREDENTIALS", 'Invalid login credentials', 401);
         }
 
-        const token = await authTokenService.createToken({ ownerId: user.id, role: user.role, rememberMe: rememberMe || false });
+        const token = await authTokenService.createToken({ owner_id: user.id, role: user.role, remember_me: rememberMe || false });
 
 
         return res.status(200).json({
@@ -62,7 +56,11 @@ async function login(req, res, next) {
             },
         });
     } catch (error) {
-        return next(error instanceof CodedApiError ? error : new CodedApiError(error.message, 500));
+        return next(
+            error instanceof CodedApiError
+                ? error
+                : new CodedApiError('LOGIN_FAILED', error.message, 500),
+        );
     }
 }
 
@@ -81,8 +79,13 @@ async function logout(req, res, next) {
             message: 'Logout successful',
         });
     } catch (error) {
-        return next(error instanceof CodedApiError ? error : new CodedApiError(error.message, 500));
+        return next(
+            error instanceof CodedApiError
+                ? error
+                : new CodedApiError('LOGOUT_FAILED', error.message, 500),
+        );
     }
 }
+
 
 module.exports = { register, login, logout };

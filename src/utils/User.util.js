@@ -1,10 +1,9 @@
 
-
 function sanitizeUser(user) {
-    const { password, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+  const { password, ...userWithoutPassword } = user;
+  return userWithoutPassword;
 }
 
 module.exports = {
-    sanitizeUser,
+  sanitizeUser,
 };
