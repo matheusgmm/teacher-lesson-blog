@@ -6,16 +6,13 @@ const userService = require('../services/user-service');
 async function updateUser(req, res, next) {
     try {
         const data = req.body;
-
         const requester = await getUserByToken(req.headers.authorization?.split(' ')[1]);
-        console.log("Requester: ", requester);
         if (!requester) {
             throw new CodedApiError("UNAUTHORIZED", 'Unauthorized', 401);
         }
 
         const target = req.params.id || requester.id;
         const user = await userService.updateUser(target, data, requester);
-        console.log("User: ", user);
 
         return res.status(200).json({
             status: 200,

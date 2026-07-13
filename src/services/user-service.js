@@ -66,14 +66,15 @@ async function createUser(data, requester = null) {
 }
 
 async function updateUser(targetId, data, requester) {
-  const isSelf = requester.id === targetId;
+  const id = Number(targetId);
+  const isSelf = requester.id === id;
   const isAdmin = requester.role === 'ADMIN';
 
   if (!isSelf && !isAdmin) {
     throw new CodedApiError("UNAUTHORIZED", 'Unauthorized, you are not allowed to update this user', 401);
   }
 
-  const alreadyExists = await findUserById(targetId);
+  const alreadyExists = await findUserById(id);
   if (!alreadyExists || alreadyExists.deleted_at) {
     throw new CodedApiError("USER_NOT_FOUND", 'User not found', 404);
   }
@@ -93,12 +94,12 @@ async function updateUser(targetId, data, requester) {
 
   if (allowed.email !== undefined) {
     const emailExists = await findUserByEmail(allowed.email);
-    if (emailExists && emailExists.id !== targetId) {
+    if (emailExists && emailExists.id !== id) {
       throw new CodedApiError("EMAIL_ALREADY_EXISTS", 'Email already exists', 400);
     }
   }
 
-  return userRepository.updateUser(Number(targetId), allowed);
+  return userRepository.updateUser(id, allowed);
 }
 
 
