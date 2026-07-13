@@ -2,11 +2,15 @@
   "name": "teacher-lesson-blog",
   "version": "1.0.0",
   "description": "Node.js backend for a teacher lesson-sharing blog platform built to support public education at scale.",
-  "main": "src/app.js",
+  "main": "src/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest --runInBand",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --runInBand --coverage",
+    "test:unit": "jest --runInBand tests/unit",
+    "test:endpoints": "jest --runInBand tests/endpoints",
     "dev": "nodemon",
-    "start": "node src/app.js",
+    "start": "node src/server.js",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
@@ -29,7 +33,9 @@
     "jsonwebtoken": "^9.0.3"
   },
   "devDependencies": {
+    "jest": "^30.4.2",
     "nodemon": "^3.1.14",
-    "prisma": "^7.8.0"
+    "prisma": "^7.8.0",
+    "supertest": "^7.2.2"
   }
 }

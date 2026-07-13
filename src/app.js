@@ -6,9 +6,8 @@ const { errorHandler } = require('./middlewares/error-handler.middleware');
 const { CodedApiError } = require('./utils/CodedApiError.util');
 const userRoutes = require('./routes/user.routes');
 const postRoutes = require('./routes/post.routes');
+
 const app = express();
-const PORT = process.env.PORT || 3000;
-const HOST = process.env.HOST || 'localhost';
 
 app.use(express.json());
 
@@ -29,13 +28,4 @@ app.use((req, res, next) => {
 
 app.use(errorHandler);
 
-app.listen(PORT, HOST, () => 
-  console.log(""),
-  console.log(""),
-  console.log("=================================="),
-  console.log(),
-  console.log(`Server running on:` + " " + "http://" + HOST + ":" + PORT), 
-  console.log(""),
-  console.log("=================================="),
-  console.log(""),
-);
+module.exports = app;
