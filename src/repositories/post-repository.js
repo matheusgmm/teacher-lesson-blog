@@ -1,11 +1,11 @@
 const { prisma } = require('../config/prisma');
 
-async function createPost(data) {
+async function createPost(data, requesterId) {
   return await prisma.post.create({
     data: {
       title: data.title,
       description: data.description,
-      user_id: data.user_id,
+      user_id: requesterId,
       status: 'PUBLISHED',
     },
   });
@@ -23,15 +23,6 @@ async function updatePost(id, data) {
   });
 }
 
-async function archivePost(id) {
-  return await prisma.post.update({
-    where: { id },
-    data: {
-      status: 'ARCHIVED',
-      updated_at: new Date(),
-    },
-  });
-}
 
 async function deletePost(id) {
   return await prisma.post.update({
@@ -44,14 +35,58 @@ async function deletePost(id) {
   });
 }
 
-async function getAllActivePosts() {
-  return await prisma.post.findMany({
-    where: {
-      deleted_at: null,
-    },
-    orderBy: {
-      created_at: 'desc',
-    },
+async function getAllActivePosts({ search, page = 1, limit = 10 } = {}) {
+  const take = Math.min(Math.max(Number(limit) || 10, 1), 50);
+  const currentPage = Math.max(Number(page) || 1, 1);
+  const skip = (currentPage - 1) * take;
+
+  const where = {
+    deleted_at: null,
+    ...(search ? {
+      OR: [
+        { title: { contains: search } },
+        { description: { contains: search } },
+      ],
+    } : {}),
+  };
+
+
+  const [data, total] = await Promise.all([
+    prisma.post.findMany({
+      where,
+      orderBy: { created_at: 'desc' },
+      skip,
+      take,
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        status: true,
+        created_at: true,
+        updated_at: true,
+        user_id: true,
+        user: {
+          select: { id: true, name: true, email: true }
+        },
+      },
+    }),
+    prisma.post.count({ where }),
+  ]);
+
+  return {
+    data,
+    meta: {
+      page: currentPage,
+      limit: take,
+      total,
+      totalPages: Math.ceil(total / take) || 1,
+    }
+  };
+}
+
+async function getActivePostById(id) {
+  return await prisma.post.findUnique({
+    where: { id: Number(id), deleted_at: null },
     select: {
       id: true,
       title: true,
@@ -60,7 +95,9 @@ async function getAllActivePosts() {
       created_at: true,
       updated_at: true,
       user_id: true,
-      user: true,
+      user: {
+        select: { id: true, name: true, email: true }
+      },
     },
   });
 }
@@ -70,13 +107,6 @@ async function getPostById(id) {
     where: { id },
     select: {
       id: true,
-      title: true,
-      description: true,
-      status: true,
-      created_at: true,
-      updated_at: true,
-      user_id: true,
-      user: true,
     },
   });
 }
@@ -84,8 +114,8 @@ async function getPostById(id) {
 module.exports = {
   createPost,
   updatePost,
-  archivePost,
   deletePost,
   getAllActivePosts,
+  getActivePostById,
   getPostById,
 };
