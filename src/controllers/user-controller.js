@@ -1,5 +1,5 @@
 const { getUserByToken } = require('../utils/Token.util');
-const { sanitizeUser } = require('../utils/User.util');
+const { toUserResponse, toPaginatedResponse } = require('../utils/helpers.util');
 const { CodedApiError } = require('../utils/CodedApiError.util');
 const userService = require('../services/user-service');
 
@@ -17,7 +17,7 @@ async function updateUser(req, res, next) {
         return res.status(200).json({
             status: 200,
             message: 'User updated successfully',
-            data: sanitizeUser(user),
+            data: toUserResponse(user),
         });
 
     } catch (error) {
@@ -28,7 +28,6 @@ async function updateUser(req, res, next) {
         );
     }
 }
-
 
 async function deleteUser(req, res, next) {
     try {
@@ -68,7 +67,7 @@ async function getUserById(req, res, next) {
         return res.status(200).json({
             status: 200,
             message: 'User fetched successfully',
-            data: sanitizeUser(user),
+            data: toUserResponse(user),
         });
     }
     catch (error) {
@@ -80,17 +79,17 @@ async function getUserById(req, res, next) {
     }
 }
 
-
 async function getAllActiveUsers(req, res, next) {
     try {
         const page = req.query.page || 1;
         const limit = req.query.limit || 10;
         const search = req.query.search?.trim() || '';
-        const users = await userService.getAllActiveUsers({ search, page, limit });
+        const result = await userService.getAllActiveUsers({ search, page, limit });
+
         return res.status(200).json({
             status: 200,
             message: 'Users fetched successfully',
-            ...users,
+            ...toPaginatedResponse(result, toUserResponse),
         });
     }
     catch (error) {

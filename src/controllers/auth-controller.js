@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const { CodedApiError } = require('../utils/CodedApiError.util');
-const { sanitizeUser } = require('../utils/User.util');
+const { toUserResponse } = require('../utils/helpers.util');
 const { getUserByToken } = require('../utils/Token.util');
 const userService = require('../services/user-service');
 const authTokenService = require('../services/auth-token-service');
@@ -9,7 +9,6 @@ async function register(req, res, next) {
     try {
         const { name, email, password, role } = req.body;
         const rawToken = req.headers.authorization?.split(' ')[1]?.trim();
-
 
         const requester = rawToken ? await getUserByToken(rawToken) : null;
 
@@ -21,7 +20,7 @@ async function register(req, res, next) {
         return res.status(201).json({
             status: 201,
             message: 'User created successfully',
-            data: sanitizeUser(user),
+            data: toUserResponse(user),
         });
     } catch (error) {
         return next(
@@ -50,14 +49,17 @@ async function login(req, res, next) {
             throw new CodedApiError("INVALID_CREDENTIALS", 'Invalid login credentials', 401);
         }
 
-        const token = await authTokenService.createToken({ owner_id: user.id, role: user.role, remember_me: rememberMe || false });
-
+        const token = await authTokenService.createToken({
+            owner_id: user.id,
+            role: user.role,
+            remember_me: rememberMe || false,
+        });
 
         return res.status(200).json({
             status: 200,
             message: 'Login successful',
             data: {
-                user: sanitizeUser(user),
+                user: toUserResponse(user),
                 token: token.token,
             },
         });
@@ -92,6 +94,5 @@ async function logout(req, res, next) {
         );
     }
 }
-
 
 module.exports = { register, login, logout };

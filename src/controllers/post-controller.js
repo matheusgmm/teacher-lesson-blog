@@ -1,5 +1,6 @@
 const { CodedApiError } = require('../utils/CodedApiError.util');
 const { getUserByToken } = require('../utils/Token.util');
+const { toPostResponse, toPaginatedResponse } = require('../utils/helpers.util');
 const postService = require('../services/post-service');
 
 
@@ -15,7 +16,7 @@ async function createPost(req, res, next) {
         return res.status(201).json({
             status: 201,
             message: "Post created successfully",
-            data: result,
+            data: toPostResponse(result),
         });
 
     } catch (error) {
@@ -46,7 +47,7 @@ async function updatePost(req, res, next) {
         return res.status(200).json({
             status: 200,
             message: "Post updated successfully",
-            data: result,
+            data: toPostResponse(result),
         });
     } catch (error) {
         return next(error instanceof CodedApiError
@@ -68,7 +69,7 @@ async function deletePost(req, res, next) {
         return res.status(200).json({
             status: 200,
             message: "Post deleted successfully",
-            data: {},
+            data: null,
         });
     } catch (error) {
         return next(
@@ -87,7 +88,7 @@ async function getActivePostById(req, res, next) {
         return res.status(200).json({
             status: 200,
             message: "Post fetched successfully",
-            data: result,
+            data: toPostResponse(result),
         });
     } catch (error) {
         return next(
@@ -109,7 +110,7 @@ async function getAllActivePosts(req, res, next) {
         return res.status(200).json({
             status: 200,
             message: "Posts fetched successfully",
-            ...result,
+            ...toPaginatedResponse(result, toPostResponse),
         });
     } catch (error) {
         return next(
