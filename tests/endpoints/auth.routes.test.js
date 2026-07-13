@@ -116,6 +116,23 @@ describe('GET /status', () => {
   });
 });
 
+describe('POST /api/auth/logout', () => {
+  it('should return 401 when the token is expired', async () => {
+    const { CodedApiError } = require('../../src/utils/CodedApiError.util');
+    authTokenService.deleteToken.mockRejectedValue(
+      new CodedApiError('TOKEN_EXPIRED', 'Token expired', 401),
+    );
+
+    const res = await request(app)
+      .post('/api/auth/logout')
+      .set('Authorization', 'Bearer expired-token');
+
+    expect(res.status).toBe(401);
+    expect(res.body.code).toBe('TOKEN_EXPIRED');
+    expect(authTokenService.deleteToken).toHaveBeenCalledWith('expired-token');
+  });
+});
+
 afterEach(() => {
   getUserByToken.mockReset();
   verifyToken.mockReset();
