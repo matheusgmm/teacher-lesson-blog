@@ -11,7 +11,7 @@ async function findToken(token) {
 }
 
 async function createToken(data) {
-  if (!data.ownerId || !data.role) {
+  if (!data.owner_id || !data.role) {
     throw new CodedApiError("OWNER_ID_REQUIRED", 'Owner id and role are required', 400);
   }
 
@@ -33,7 +33,7 @@ async function deleteToken(token) {
     throw new CodedApiError("TOKEN_NOT_FOUND_OR_REVOKED", 'Token not found or already revoked', 401);
   }
 
-  if (storedToken.expiresAt < new Date()) {
+  if (storedToken.expires_at < new Date()) {
     await authTokenRepository.deleteAuthToken(cleanToken);
     throw new CodedApiError("TOKEN_EXPIRED", 'Token expired', 401);
   }

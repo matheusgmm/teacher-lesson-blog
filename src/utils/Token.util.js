@@ -1,14 +1,15 @@
 const jwt = require('jsonwebtoken');
 const { CodedApiError } = require('./CodedApiError.util');
+const userService = require('../services/user-service');
 
-function generateToken(ownerId, role) {
-  return jwt.sign({ ownerId, role }, process.env.JWT_SECRET, {
+function generateToken(owner_id, role) {
+  return jwt.sign({ owner_id, role }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
 }
 
-function generateRememberMeToken(ownerId, role) {
-  return jwt.sign({ ownerId, role }, process.env.JWT_SECRET, {
+function generateRememberMeToken(owner_id, role) {
+  return jwt.sign({ owner_id, role }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_REMEMBER_ME_EXPIRES_IN,
   });
 }
@@ -53,11 +54,30 @@ function getExpirationDate(rememberMe = false) {
 function getUserRoleByToken(token) {
   const verifiedToken = verifyToken(token);
 
-  if (!verifiedToken?.ownerId || !verifiedToken?.role) {
+  if (!verifiedToken?.owner_id || !verifiedToken?.role) {
     throw new CodedApiError("INVALID_TOKEN", 'Invalid token', 401);
   }
 
   return verifiedToken.role;
+}
+
+
+async function getUserByToken(token) {
+  if (!token) {
+    throw new CodedApiError("TOKEN_REQUIRED", 'Token is required', 400);
+  }
+
+  const verifiedToken = verifyToken(token);
+  if (!verifiedToken?.owner_id) {
+    throw new CodedApiError("INVALID_TOKEN", 'Invalid token', 401);
+  }
+
+  const user = await userService.findUserById(verifiedToken.owner_id);
+  if (!user || user.deleted_at) {
+    throw new CodedApiError("USER_NOT_FOUND", 'User not found', 404);
+  }
+
+  return user;
 }
 
 module.exports = {
@@ -67,4 +87,5 @@ module.exports = {
   decodeToken,
   getExpirationDate,
   getUserRoleByToken,
+  getUserByToken,
 };

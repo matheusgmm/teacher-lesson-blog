@@ -16,30 +16,36 @@ model User {
   name      String
   email     String        @unique
   password  String
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt @default(now())
-  deletedAt DateTime? 
+  created_at DateTime      @default(now())
+  updated_at DateTime      @updatedAt @default(now())
+  deleted_at DateTime? 
   role      Role          @default(USER)
   posts Post[]
   authTokens AuthToken[]
+
+  @@map("user")
 }
 
 model Post {
   id          Int         @id @default(autoincrement())
   title       String
   description String
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt @default(now())
-  deletedAt   DateTime?
-  userId      Int
-  user        User        @relation(fields: [userId], references: [id])
+  created_at   DateTime    @default(now())
+  updated_at   DateTime    @updatedAt @default(now())
+  deleted_at   DateTime?
+  user_id      Int
+  user        User        @relation(fields: [user_id], references: [id])
   status      PostStatus  @default(DRAFT)
+
+  @@map("post")
 }
 
 
 enum Role {
   ADMIN
   USER
+
+  @@map("role")
 }
 
 enum PostStatus {
@@ -47,15 +53,19 @@ enum PostStatus {
   PUBLISHED
   ARCHIVED
   DELETED
+
+  @@map("post_status")
 }
 
 model AuthToken {
   id        Int         @id @default(autoincrement())
   token     String      @unique
-  ownerId    Int
-  user      User        @relation(fields: [ownerId], references: [id])
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt @default(now())
-  expiresAt DateTime
-  rememberMe Boolean    @default(false)
+  owner_id    Int
+  user      User        @relation(fields: [owner_id], references: [id])
+  created_at DateTime    @default(now())
+  updated_at DateTime    @updatedAt @default(now())
+  expires_at DateTime
+  remember_me Boolean    @default(false)
+
+  @@map("auth_token")
 }

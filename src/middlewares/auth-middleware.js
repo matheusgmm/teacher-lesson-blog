@@ -11,7 +11,7 @@ async function authenticateToken(req, res, next) {
   try {
     const storedToken = await authTokenService.findToken(token);
 
-    if (!storedToken || storedToken.expiresAt < new Date()) {
+    if (!storedToken || storedToken.expires_at < new Date()) {
       return res.status(401).json({ status: 401, message: 'Unauthorized' });
     }
 

@@ -7,15 +7,15 @@ const {
 
 async function createAuthToken(data) {
   const token = data.rememberMe
-    ? generateRememberMeToken(data.ownerId, data.role)
-    : generateToken(data.ownerId, data.role);
+    ? generateRememberMeToken(data.owner_id, data.role)
+    : generateToken(data.owner_id, data.role);
 
   return prisma.authToken.create({
     data: {
       token,
-      ownerId: data.ownerId,
-      expiresAt: getExpirationDate(data.rememberMe),
-      rememberMe: data.rememberMe,
+      owner_id: data.owner_id,
+      expires_at: getExpirationDate(data.rememberMe),
+      remember_me: data.rememberMe,
     },
   });
 }
@@ -32,11 +32,11 @@ async function findToken(token) {
     select: {
       id: true,
       token: true,
-      ownerId: true,
-      rememberMe: true,
-      expiresAt: true,
-      createdAt: true,
-      updatedAt: true,
+      owner_id: true,
+      remember_me: true,
+      expires_at: true,
+      created_at: true,
+      updated_at: true,
     },
   });
 }
