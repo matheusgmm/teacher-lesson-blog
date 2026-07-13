@@ -6,6 +6,7 @@ const { errorHandler } = require('./middlewares/error-handler.middleware');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || 'localhost';
 
 app.use(express.json());
 
@@ -20,4 +21,13 @@ app.use('/api/auth', authRoutes);
 
 app.use(errorHandler);
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, HOST, () => 
+  console.log(""),
+  console.log(""),
+  console.log("=================================="),
+  console.log(),
+  console.log(`Server running on:` + " " + "http://" + HOST + ":" + PORT), 
+  console.log(""),
+  console.log("=================================="),
+  console.log(""),
+);

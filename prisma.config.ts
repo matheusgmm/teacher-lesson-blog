@@ -3,12 +3,22 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
+function buildDatabaseUrl() {
+  const { MYSQL_USER, MYSQL_PASSWORD, MYSQL_HOST, MYSQL_PORT, MYSQL_DATABASE } = process.env;
+
+  if (!MYSQL_USER || !MYSQL_PASSWORD || !MYSQL_HOST || !MYSQL_PORT || !MYSQL_DATABASE) {
+    throw new Error("MYSQL environment variables are required");
+  }
+
+  return `mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}`;
+}
+
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["MYSQL_DATABASE"],
+    url: buildDatabaseUrl(),
   },
 });
