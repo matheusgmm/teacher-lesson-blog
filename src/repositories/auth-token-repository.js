@@ -1,29 +1,48 @@
 const { prisma } = require('../config/prisma');
-const { generateToken } = require('../utils/Token.util');
+const {
+  generateToken,
+  generateRememberMeToken,
+  getExpirationDate,
+} = require('../utils/Token.util');
 
-async function createAuthToken(ownerId, role) {
-  const token = generateToken(ownerId, role);
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+async function createAuthToken(data) {
+  const token = data.rememberMe
+    ? generateRememberMeToken(data.ownerId, data.role)
+    : generateToken(data.ownerId, data.role);
 
-  return await prisma.authToken.create({
+  return prisma.authToken.create({
     data: {
       token,
-      ownerId,
-      expiresAt,
-      role,
+      ownerId: data.ownerId,
+      expiresAt: getExpirationDate(data.rememberMe),
+      rememberMe: data.rememberMe,
     },
   });
 }
 
 async function deleteAuthToken(token) {
-    return await prisma.authToken.delete({
-        where: {
-            token: token,
-        },
-    });
+  return prisma.authToken.delete({
+    where: { token },
+  });
+}
+
+async function findToken(token) {
+  return prisma.authToken.findUnique({
+    where: { token },
+    select: {
+      id: true,
+      token: true,
+      ownerId: true,
+      rememberMe: true,
+      expiresAt: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
 }
 
 module.exports = {
   createAuthToken,
   deleteAuthToken,
+  findToken,
 };
