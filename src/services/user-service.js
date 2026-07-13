@@ -129,10 +129,26 @@ async function deleteUser(targetId, requester) {
   return userRepository.deactivateUser(id);
 }
 
+
+async function getUserById(id) {
+  const user = await findUserById(Number(id));
+  if (!user || user.deleted_at) {
+    throw new CodedApiError("USER_NOT_FOUND", 'User not found', 404);
+  }
+  return user;
+}
+
+
+async function getAllActiveUsers({ search, page = 1, limit = 10 } = {}) {
+  return userRepository.getAllActiveUsers({ search, page, limit });
+}
+
 module.exports = {
   findUserByEmail,
   findUserById,
   createUser,
   updateUser,
   deleteUser,
+  getUserById,
+  getAllActiveUsers
 };

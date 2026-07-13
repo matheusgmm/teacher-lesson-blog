@@ -60,22 +60,50 @@ async function deactivateUser(id) {
   });
 }
 
-async function getAllActiveUsers() {
-  return await prisma.user.findMany({
-    where: {
-      deleted_at: null,
-    },
-    orderBy: {
-      created_at: 'desc',
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      created_at: true,
-    },
-  });
+async function getAllActiveUsers({ search, page = 1, limit = 10 } = {}) {
+  const take = Math.min(Math.max(Number(limit) || 10, 1), 50);
+  const currentPage = Math.max(Number(page) || 1, 1);
+  const skip = (currentPage - 1) * take;
+
+  const where = {
+    deleted_at: null,
+    ...(search ? {
+      OR: [
+        { name: { contains: search } },
+        { email: { contains: search } },
+      ],
+    } : {}),
+  };
+
+  const [data, total] = await Promise.all([
+    prisma.user.findMany({
+      where, 
+      orderBy: { created_at: 'desc' },
+      skip,
+      take,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        created_at: true,
+        updated_at: true,
+      },
+    }),
+    prisma.user.count({
+      where,
+    }),
+  ])
+
+  return {
+    data,
+    meta: {
+      page: currentPage,
+      limit: take,
+      total,
+      totalPages: Math.ceil(total / take) || 1,
+    }
+  };
 }
 
 async function getUserAndPosts(id) {

@@ -58,5 +58,48 @@ async function deleteUser(req, res, next) {
     }
 }
 
+async function getUserById(req, res, next) {
+    try {
+        const id = req.params.id || req.query.id;
+        if (!id) {
+            throw new CodedApiError('USER_ID_REQUIRED', 'User id is required', 400);
+        }
+        const user = await userService.getUserById(id);
+        return res.status(200).json({
+            status: 200,
+            message: 'User fetched successfully',
+            data: sanitizeUser(user),
+        });
+    }
+    catch (error) {
+        return next(
+            error instanceof CodedApiError
+                ? error
+                : new CodedApiError('GET_USER_FAILED', error.message, 500),
+        );
+    }
+}
 
-module.exports = { updateUser, deleteUser };
+
+async function getAllActiveUsers(req, res, next) {
+    try {
+        const page = req.query.page || 1;
+        const limit = req.query.limit || 10;
+        const search = req.query.search?.trim() || '';
+        const users = await userService.getAllActiveUsers({ search, page, limit });
+        return res.status(200).json({
+            status: 200,
+            message: 'Users fetched successfully',
+            ...users,
+        });
+    }
+    catch (error) {
+        return next(
+            error instanceof CodedApiError
+                ? error
+                : new CodedApiError('GET_USERS_FAILED', error.message, 500),
+        );
+    }
+}
+
+module.exports = { updateUser, deleteUser, getUserById, getAllActiveUsers };

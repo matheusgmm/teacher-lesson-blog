@@ -1,9 +1,12 @@
 const express = require('express');
-const { updateUser, deleteUser } = require('../controllers/user-controller');
+const { updateUser, deleteUser, getUserById, getAllActiveUsers } = require('../controllers/user-controller');
 const { authenticateToken } = require('../middlewares/auth-middleware');
 const { isAdmin } = require('../middlewares/role.middleware');
 
 const router = express.Router();
+
+router.get('/:id', authenticateToken, getUserById);
+router.get('/', authenticateToken, getAllActiveUsers);
 
 router.patch('/', authenticateToken, updateUser);
 router.patch('/:id', authenticateToken, isAdmin, updateUser);
