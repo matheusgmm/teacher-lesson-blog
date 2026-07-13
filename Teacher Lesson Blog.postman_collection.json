@@ -1,0 +1,429 @@
+{
+  "info": {
+    "_postman_id": "32c004ea-ed12-4e7e-bfe3-2e6ef527ac4f",
+    "name": "Teacher Lesson Blog",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "32629713"
+  },
+  "item": [
+    {
+      "name": "[OPEN] HealthCheck",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/status",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "status"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "[OPEN] Register",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"name\": \"Joao\",\n    \"email\": \"joao@tech.com.br\",\n    \"password\": \"password123\",\n    \"role\": \"USER\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{host}}/api/auth/register",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "[OPEN] Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code >= 200 && pm.response.code < 300) {",
+              "    var json = pm.response.json();",
+              "    pm.environment.set('token', json.data.token);",
+              "}"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "packages": {},
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\": \"admin@teacherlesson.local\",\n    \"password\": \"Admin@123\",\n    \"rememberMe\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{host}}/api/auth/login",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "[OPEN] Logout",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{host}}/api/auth/logout",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "logout"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "[ADMIN] Update User By ID",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\": \"joao.teacher@tech.com.br\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{host}}/api/user/4",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "api",
+            "user",
+            "4"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "[AUTH] Update User",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\": \"joao@tech.com.br\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{host}}/api/user/",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "api",
+            "user",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "[ADMIN] Delete User By ID",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{host}}/api/user/?id=2",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "api",
+            "user",
+            ""
+          ],
+          "query": [
+            {
+              "key": "id",
+              "value": "2"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "[AUTH] Get All Active Posts",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/api/post?search=aula&page=1&limit=5",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "api",
+            "post"
+          ],
+          "query": [
+            {
+              "key": "search",
+              "value": "aula"
+            },
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "5"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "[AUTH] Get All Active Users",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/api/user?search=joao&page=1&limit=5",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "api",
+            "user"
+          ],
+          "query": [
+            {
+              "key": "search",
+              "value": "joao"
+            },
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "5"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "[ADMIN] Create Post",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"title\": \"Welcome Back to Class\",\n    \"description\": \"Tips for a good start\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{host}}/api/post",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "api",
+            "post"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "[ADMIN] Update Post By ID",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"title\": \"Welcome Back to Class: Tips for a Good Start\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{host}}/api/post/1",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "api",
+            "post",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "[AUTH] GET Post By ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/api/post/1",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "api",
+            "post",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ]
+}

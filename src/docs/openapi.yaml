@@ -1,0 +1,727 @@
+openapi: 3.0.3
+info:
+  title: Teacher Lesson Blog API
+  version: 1.0.0
+  description: |
+    Backend API for a teacher lesson-sharing blog platform.
+
+    ## Authentication
+    Most endpoints require a Bearer JWT token.
+
+    1. Call `POST /api/auth/login` with seeded admin credentials (or a registered user).
+
+    2. Copy `data.token` from the response.
+
+    3. Click **Authorize** in Swagger UI and paste: `Bearer <token>` (or only the token if the UI adds the prefix).
+
+    ## Roles
+    - **USER** — self-service profile updates; read posts/users.
+    - **ADMIN** — manage other users, create/update/delete posts, create users with a custom role.
+
+    ## Seeded admin
+    After running `npm run db:seed`, an admin account is available (defaults):
+
+    - email: `admin@teacherlesson.local`
+    
+    - password: `Admin@123`
+
+    Public self-registration always creates `USER`. Only an authenticated **ADMIN** can create another admin
+    by calling `POST /api/auth/register` with a Bearer token and `"role": "ADMIN"`.
+  contact:
+    name: Teacher Lesson Blog
+
+servers:
+  - url: http://localhost:3000
+    description: Local development
+
+tags:
+  - name: Health
+    description: Service health checks
+  - name: Auth
+    description: Register, login and logout
+  - name: Users
+    description: User profile and administration
+  - name: Posts
+    description: Lesson posts (CRUD)
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT returned by `POST /api/auth/login`
+
+  schemas:
+    ApiError:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 400
+        code:
+          type: string
+          example: EMAIL_ALREADY_EXISTS
+        message:
+          type: string
+          example: Email already exists
+        timestamp:
+          type: string
+          format: date-time
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Administrator
+        email:
+          type: string
+          format: email
+          example: admin@teacherlesson.local
+        role:
+          type: string
+          enum: [ADMIN, USER]
+          example: ADMIN
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Author:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+
+    Post:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: Welcome Back to Class
+        description:
+          type: string
+          example: Tips for a good start
+        status:
+          type: string
+          enum: [DRAFT, PUBLISHED, ARCHIVED, DELETED]
+        user_id:
+          type: integer
+        author:
+          $ref: '#/components/schemas/Author'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 10
+        total:
+          type: integer
+          example: 42
+        totalPages:
+          type: integer
+          example: 5
+
+    RegisterRequest:
+      type: object
+      required: [name, email, password]
+      properties:
+        name:
+          type: string
+          example: John Teacher
+        email:
+          type: string
+          format: email
+          example: john@tech.com.br
+        password:
+          type: string
+          format: password
+          example: password123
+        role:
+          type: string
+          enum: [ADMIN, USER]
+          description: Ignored for public registration (forced to USER). Only admins can set this when authenticated.
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: admin@teacherlesson.local
+        password:
+          type: string
+          format: password
+          example: Admin@123
+        rememberMe:
+          type: boolean
+          default: false
+          description: When true, issues a longer-lived token.
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        role:
+          type: string
+          enum: [ADMIN, USER]
+          description: Only admins may change role.
+
+    CreatePostRequest:
+      type: object
+      required: [title, description]
+      properties:
+        title:
+          type: string
+          example: Welcome Back to Class
+        description:
+          type: string
+          example: Tips for a good start
+
+    UpdatePostRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [DRAFT, PUBLISHED, ARCHIVED, DELETED]
+
+    SuccessUser:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 200
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/User'
+
+    SuccessPost:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 200
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Post'
+
+    SuccessUsersPage:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 200
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    SuccessPostsPage:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 200
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Post'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    LoginSuccess:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: Login successful
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/User'
+            token:
+              type: string
+              example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+paths:
+  /status:
+    get:
+      tags: [Health]
+      summary: Health check
+      description: Returns API uptime status. No authentication required.
+      responses:
+        '200':
+          description: Service is running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: Running
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a user
+      description: |
+        - **Without token**: public self-registration. Role is always `USER` (any `role` in body is ignored).
+        - **With ADMIN token**: create another user. Optional `role` (`USER` | `ADMIN`).
+        - Authenticated non-admin callers receive `403`.
+      security: []
+      parameters:
+        - in: header
+          name: Authorization
+          required: false
+          schema:
+            type: string
+          description: Optional `Bearer <admin-token>` when an admin creates another user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessUser'
+        '400':
+          description: Validation error or email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Authenticated non-admin tried to create a user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login
+      description: Authenticates with email/password and returns a JWT plus the user payload (no password).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginSuccess'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /api/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout
+      description: >
+        Revokes the current token. Send it in the Authorization Bearer header
+        or in the body as token.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: Logout successful
+        '400':
+          description: Token missing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /api/user:
+    get:
+      tags: [Users]
+      summary: List active users
+      description: Paginated list with optional search on name/email.
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Filter by name or email (contains)
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+            maximum: 50
+      responses:
+        '200':
+          description: Users page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessUsersPage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+    patch:
+      tags: [Users]
+      summary: Update authenticated user (self)
+      description: Updates the logged-in user. Non-admins cannot change `role`.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessUser'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+    delete:
+      tags: [Users]
+      summary: Delete a user (admin)
+      description: Soft-deletes a user. Provide `id` as query parameter. Admins cannot delete themselves.
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Target user id
+      responses:
+        '200':
+          description: User deleted
+        '400':
+          description: Missing id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (not admin or self-delete)
+
+  /api/user/{id}:
+    get:
+      tags: [Users]
+      summary: Get user by id
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessUser'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+    patch:
+      tags: [Users]
+      summary: Update user by id (admin)
+      description: Admin-only. Can update another user including `role`.
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessUser'
+        '403':
+          description: Forbidden
+    delete:
+      tags: [Users]
+      summary: Delete user by id (admin)
+      description: Soft-deletes the user. Self-delete is forbidden.
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User deleted
+        '403':
+          description: Forbidden
+        '404':
+          description: User not found
+
+  /api/post:
+    get:
+      tags: [Posts]
+      summary: List active posts
+      description: Paginated list with optional search on title/description.
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+            maximum: 50
+      responses:
+        '200':
+          description: Posts page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessPostsPage'
+    post:
+      tags: [Posts]
+      summary: Create a post (admin)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePostRequest'
+      responses:
+        '201':
+          description: Post created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessPost'
+        '403':
+          description: Forbidden (admin only)
+    patch:
+      tags: [Posts]
+      summary: Update a post (admin) via query id
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePostRequest'
+      responses:
+        '200':
+          description: Post updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessPost'
+    delete:
+      tags: [Posts]
+      summary: Delete a post (admin) via query id
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Post deleted
+
+  /api/post/{id}:
+    get:
+      tags: [Posts]
+      summary: Get post by id
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Post found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessPost'
+        '404':
+          description: Post not found
+    patch:
+      tags: [Posts]
+      summary: Update post by id (admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePostRequest'
+      responses:
+        '200':
+          description: Post updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessPost'
+    delete:
+      tags: [Posts]
+      summary: Delete post by id (admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Post deleted

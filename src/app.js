@@ -6,10 +6,13 @@ const { errorHandler } = require('./middlewares/error-handler.middleware');
 const { CodedApiError } = require('./utils/CodedApiError.util');
 const userRoutes = require('./routes/user.routes');
 const postRoutes = require('./routes/post.routes');
+const { setupSwagger } = require('./docs/swagger');
 
 const app = express();
 
 app.use(express.json());
+
+setupSwagger(app);
 
 app.get('/status', (_, res) => {
   res.json({
