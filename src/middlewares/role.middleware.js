@@ -1,15 +1,14 @@
 const { CodedApiError } = require('../utils/CodedApiError.util');
 
+function authorizeRoles(...roles) {
+  return (req, res, next) => {
+    if (!req.user) {
+      return new CodedApiError('UNAUTHORIZED', 'Unauthorized', 401).send(res);
+    }
 
-async function authorizeRoles(...roles) {
-    return (req, res, next) => {
-        if (!req.user) {
-            return new CodedApiError("UNAUTHORIZED", 'Unauthorized', 401).send(res);
-        }
-
-        if (!roles.includes(req.user.role)) {
-            return new CodedApiError("FORBIDDEN", 'Forbidden', 403).send(res);
-        }
+    if (!roles.includes(req.user.role)) {
+      return new CodedApiError('FORBIDDEN', 'Forbidden', 403).send(res);
+    }
 
     return next();
   };

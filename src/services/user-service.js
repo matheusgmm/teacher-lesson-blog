@@ -18,17 +18,51 @@ async function findUserById(id) {
   return userRepository.getUserById(Number(id));
 }
 
-async function createUser(data) {
+const ALLOWED_ROLES = ['ADMIN', 'USER'];
+
+function resolveCreateRole(data, requester) {
+  if (!requester) {
+    return 'USER';
+  }
+
+  // Only admins can create other users
+  if (requester.role !== 'ADMIN') {
+    throw new CodedApiError(
+      'FORBIDDEN',
+      'Only admins can create other users',
+      403,
+    );
+  }
+
+  if (data.role === undefined || data.role === null || data.role === '') {
+    return 'USER';
+  }
+
+  if (!ALLOWED_ROLES.includes(data.role)) {
+    throw new CodedApiError('INVALID_ROLE', 'Invalid role', 400);
+  }
+
+  return data.role;
+}
+
+async function createUser(data, requester = null) {
   if (!data.name || !data.email || !data.password) {
     throw new CodedApiError("NAME_EMAIL_PASSWORD_REQUIRED", 'Name, email and password are required', 400);
   }
 
   const emailExists = await findUserByEmail(data.email);
-  if (emailExists && emailExists.id !== data.id) {
+  if (emailExists) {
     throw new CodedApiError("EMAIL_ALREADY_EXISTS", 'Email already exists', 400);
   }
 
-  return userRepository.createUser(data);
+  const role = resolveCreateRole(data, requester);
+
+  return userRepository.createUser({
+    name: data.name,
+    email: data.email,
+    password: data.password,
+    role,
+  });
 }
 
 async function updateUser(targetId, data, requester) {
@@ -48,7 +82,14 @@ async function updateUser(targetId, data, requester) {
     ? pick(data, ['name', 'email', 'password', 'role'])
     : pick(data, ['name', 'email', 'password']);
 
-  allowed.role = isAdmin ? allowed.role || 'USER' : 'USER';
+  if (allowed.role !== undefined) {
+    if (!isAdmin) {
+      throw new CodedApiError('FORBIDDEN', 'Only admins can change user role', 403);
+    }
+    if (!ALLOWED_ROLES.includes(allowed.role)) {
+      throw new CodedApiError('INVALID_ROLE', 'Invalid role', 400);
+    }
+  }
 
   if (allowed.email !== undefined) {
     const emailExists = await findUserByEmail(allowed.email);

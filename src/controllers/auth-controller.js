@@ -1,22 +1,28 @@
 const bcrypt = require('bcryptjs');
 const { CodedApiError } = require('../utils/CodedApiError.util');
 const { sanitizeUser } = require('../utils/User.util');
+const { getUserByToken } = require('../utils/Token.util');
 const userService = require('../services/user-service');
 const authTokenService = require('../services/auth-token-service');
 
 async function register(req, res, next) {
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password, role } = req.body;
+        const rawToken = req.headers.authorization?.split(' ')[1]?.trim();
 
-        const user = await userService.createUser({ name, email, password });
+
+        const requester = rawToken ? await getUserByToken(rawToken) : null;
+
+        const user = await userService.createUser(
+            { name, email, password, role },
+            requester,
+        );
 
         return res.status(201).json({
             status: 201,
             message: 'User created successfully',
-            data: sanitizeUser(user)
+            data: sanitizeUser(user),
         });
-
-
     } catch (error) {
         return next(
             error instanceof CodedApiError
