@@ -25,7 +25,6 @@ jobs:
         node-version: [22]
 
     env:
-      # Loaded from repository Secrets (never commit real values in this file)
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
       MYSQL_PORT: ${{ secrets.MYSQL_PORT }}
