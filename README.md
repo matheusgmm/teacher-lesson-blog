@@ -22,9 +22,7 @@ Stack: **Express 5**, **Prisma 7**, **MySQL 8**, **JWT**, **Jest**, **Swagger (O
 9. [Postman](#postman)
 10. [Testing](#testing)
 11. [CI/CD (GitHub Actions)](#cicd-github-actions)
-12. [Project structure](#project-structure)
-13. [Useful scripts](#useful-scripts)
-14. [API overview](#api-overview)
+12. [API overview](#api-overview)
 
 ---
 
