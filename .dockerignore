@@ -10,3 +10,7 @@ README.md
 LICENSE
 .vscode
 .cursor
+coverage
+tests
+.github
+*.md

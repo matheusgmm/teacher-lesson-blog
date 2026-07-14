@@ -249,7 +249,7 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{host}}/api/post?search=aula&page=1&limit=5",
+          "raw": "{{host}}/api/post?search=class&page=1&limit=5",
           "host": [
             "{{host}}"
           ],
@@ -260,7 +260,7 @@
           "query": [
             {
               "key": "search",
-              "value": "aula"
+              "value": "class"
             },
             {
               "key": "page",

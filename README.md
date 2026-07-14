@@ -1,8 +1,11 @@
 # Teacher Lesson Blog API
 
+[![CI](https://github.com/matheusgmm/teacher-lesson-blog/actions/workflows/ci.yml/badge.svg)](https://github.com/matheusgmm/teacher-lesson-blog/actions/workflows/ci.yml)
+[![Docker](https://github.com/matheusgmm/teacher-lesson-blog/actions/workflows/docker.yml/badge.svg)](https://github.com/matheusgmm/teacher-lesson-blog/actions/workflows/docker.yml)
+
 Node.js backend for a teacher lesson-sharing blog platform built to support public education at scale.
 
-Stack: **Express 5**, **Prisma 7**, **MySQL 8**, **JWT**, **Jest**, **Swagger (OpenAPI 3)**.
+Stack: **Express 5**, **Prisma 7**, **MySQL 8**, **JWT**, **Jest**, **Swagger (OpenAPI 3)**, **GitHub Actions**.
 
 ---
 
@@ -18,9 +21,10 @@ Stack: **Express 5**, **Prisma 7**, **MySQL 8**, **JWT**, **Jest**, **Swagger (O
 8. [Swagger documentation](#swagger-documentation)
 9. [Postman](#postman)
 10. [Testing](#testing)
-11. [Project structure](#project-structure)
-12. [Useful scripts](#useful-scripts)
-13. [API overview](#api-overview)
+11. [CI/CD (GitHub Actions)](#cicd-github-actions)
+12. [Project structure](#project-structure)
+13. [Useful scripts](#useful-scripts)
+14. [API overview](#api-overview)
 
 ---
 
@@ -32,6 +36,7 @@ Stack: **Express 5**, **Prisma 7**, **MySQL 8**, **JWT**, **Jest**, **Swagger (O
 - Role-based access (`USER` / `ADMIN`)
 - Interactive Swagger UI
 - Unit + endpoint tests (Jest + Supertest)
+- CI/CD pipelines with GitHub Actions (tests + Docker image build)
 
 ---
 
@@ -267,6 +272,49 @@ npm run test:coverage # coverage report → coverage/lcov-report/index.html
 Tests mock Prisma and do **not** require a running database.
 
 More details: [`tests/README.md`](./tests/README.md)
+
+---
+
+## CI/CD (GitHub Actions)
+
+This repository automates **CI** (quality checks) and a lightweight delivery check (Docker image build).  
+Public cloud deploy is intentionally **not** configured yet.
+
+### Workflows
+
+| Workflow | File | When it runs | What it does |
+|----------|------|--------------|--------------|
+| **CI** | `.github/workflows/ci.yml` | `push` / `pull_request` → `main` | Install deps → Prisma generate → validate OpenAPI → `npm test` → coverage artifact (uses repository Secrets for `JWT_*` / `MYSQL_*`) |
+| **Docker** | `.github/workflows/docker.yml` | `push` / `pull_request` → `main` | Build the production Docker image (`push: false`) |
+
+### What you need to do
+
+1. **Commit and push** the `.github/workflows/` files to GitHub.
+2. Open the repo → **Actions** tab → enable workflows if GitHub asks.
+3. Push to `main` or open a Pull Request into `main` to trigger the pipelines.
+4. Wait for the green checks:
+   - `CI / Test (Node 22)`
+   - `Docker / Build Docker image`
+5. (Recommended) Protect `main`:
+   - GitHub → **Settings** → **Branches** → **Add branch protection rule**
+   - Branch name: `main`
+   - Enable **Require status checks to pass before merging**
+   - Select: `Test (Node 22)` (and optionally `Build Docker image`)
+
+### Badges
+
+The badges at the top of this README reflect workflow status after the first successful run.
+
+### Coverage artifact
+
+Each CI run uploads a `coverage-report-node-22` artifact (kept for 7 days).  
+Download it from the workflow run page → **Artifacts**.
+
+### Local Docker build (same as CI)
+
+```bash
+docker build -t teacher-lesson-blog:local .
+```
 
 ---
 
