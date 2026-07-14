@@ -1,6 +1,7 @@
 # Multi-stage production image
 # Stage 1: install all deps + generate Prisma Client
 # Stage 2: copy runtime artifacts only
+# Runtime secrets (JWT, MYSQL_*) must be passed when the container starts — never baked into the image.
 
 FROM node:22-alpine AS builder
 
@@ -10,13 +11,7 @@ COPY package.json package-lock.json ./
 COPY prisma ./prisma
 COPY prisma.config.ts ./
 
-# Dummy DB URL values — required by prisma.config.ts during generate (no live DB needed)
-ENV MYSQL_HOST=localhost \
-    MYSQL_PORT=3306 \
-    MYSQL_USER=ci \
-    MYSQL_PASSWORD=ci \
-    MYSQL_DATABASE=teacher_lesson_blog
-
+# prisma.config.ts falls back to a placeholder URL for generate (no DB connection needed)
 RUN npm ci && npx prisma generate
 
 FROM node:22-alpine AS runner

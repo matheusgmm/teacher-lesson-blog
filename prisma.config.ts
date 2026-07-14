@@ -3,14 +3,24 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
+/**
+ * Builds the datasource URL for Prisma CLI (migrate/generate/seed).
+ * Prefer DATABASE_URL when set; otherwise compose from MYSQL_* vars.
+ * A placeholder URL is used only so `prisma generate` works in Docker builds
+ * without baking real credentials into the image.
+ */
 function buildDatabaseUrl() {
-  const { MYSQL_USER, MYSQL_PASSWORD, MYSQL_HOST, MYSQL_PORT, MYSQL_DATABASE } = process.env;
-
-  if (!MYSQL_USER || !MYSQL_PASSWORD || !MYSQL_HOST || !MYSQL_PORT || !MYSQL_DATABASE) {
-    throw new Error("MYSQL environment variables are required");
+  if (process.env.DATABASE_URL) {
+    return process.env.DATABASE_URL;
   }
 
-  return `mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}`;
+  const { MYSQL_USER, MYSQL_PASSWORD, MYSQL_HOST, MYSQL_PORT, MYSQL_DATABASE } = process.env;
+
+  if (MYSQL_USER && MYSQL_PASSWORD && MYSQL_HOST && MYSQL_PORT && MYSQL_DATABASE) {
+    return `mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}`;
+  }
+
+  return "mysql://build:build@127.0.0.1:3306/teacher_lesson_blog";
 }
 
 export default defineConfig({
